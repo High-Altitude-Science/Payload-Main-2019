@@ -50,5 +50,5 @@ void loop() {
   float tempC = baro.getTemperature();
   Serial.print(tempC); Serial.println("*C");
 
-  delay(250);
+  delay(1000);
 }
