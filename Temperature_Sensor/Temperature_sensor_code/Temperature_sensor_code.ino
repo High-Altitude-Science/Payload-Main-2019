@@ -1,20 +1,20 @@
 //Thermometer with thermistor
 
 /*thermistor parameters:
- * RT0: 10 000 Ω
+ * RT0: 100 000 Ω
  * B: 3977 K +- 0.75%
  * T0:  25 C
  * +- 5%
  */
 
 //These values are in the datasheet
-#define RT0 50000   // Ω
-#define B 3977      // K
+#define RT0 100000   // Ω
+#define B 3952      // K
 //--------------------------------------
 
 
 #define VCC 3.3    //Supply voltage
-#define R 50000  //R=50KΩ
+#define R 100000  //R=50KΩ
 
 //Variables
 float RT, VR, ln, TX, T0, VRT;
