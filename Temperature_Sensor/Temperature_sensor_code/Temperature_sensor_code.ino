@@ -8,13 +8,13 @@
  */
 
 //These values are in the datasheet
-#define RT0 10000   // Ω
+#define RT0 50000   // Ω
 #define B 3977      // K
 //--------------------------------------
 
 
-#define VCC 5    //Supply voltage
-#define R 10000  //R=10KΩ
+#define VCC 3.3    //Supply voltage
+#define R 50000  //R=50KΩ
 
 //Variables
 float RT, VR, ln, TX, T0, VRT;
@@ -25,7 +25,7 @@ void setup() {
 }
 
 void loop() {
-  VRT = analogRead(A37);              //Acquisition analog value of VRT
+  VRT = analogRead(A18);              //Acquisition analog value of VRT
   VRT = (5.00 / 1023.00) * VRT;      //Conversion to voltage
   VR = VCC - VRT;
   RT = VRT / (VR / R);               //Resistance of RT
