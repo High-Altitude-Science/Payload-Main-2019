@@ -21,7 +21,7 @@ void setup()
   Wire.setSDA(pin_SDA);
   Wire.setSCL(pin_SCL);
   Wire1.setSDA(pin1_SDA);
-  Wire1.setSCL(pint1_SCL);
+  Wire1.setSCL(pin1_SCL);
   delay(1000);
   Serial.println("Begin!");
 }
