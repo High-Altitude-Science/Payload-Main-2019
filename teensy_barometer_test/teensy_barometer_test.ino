@@ -1,11 +1,6 @@
 
 #include <Wire.h>
-//#include <i2c_t3.h>
 #include <Adafruit_MPL3115A2.h>
-
-//TODO This works, but we need to use the i2c_t3 library commented out above for multiple I2C connections.
-//If we are using the i2c library, we will need to make our own version of the Adafruit_MPL3115A2 code so we can
-//receive a different type of Wire object.
 
 // Power by connecting Vin to 3-5V, GND to GND
 // Uses I2C - connect SCL to the SCL pin, SDA to SDA pin
@@ -16,12 +11,17 @@ Adafruit_MPL3115A2 baro = Adafruit_MPL3115A2();
 int pin_SDA = 18; 
 int pin_SCL = 19;
 
+int pin1_SDA = 38;
+int pin1_SCL = 37;
+
 void setup() 
 {
   Serial.begin(9600);
   Wire.begin();
   Wire.setSDA(pin_SDA);
   Wire.setSCL(pin_SCL);
+  Wire1.setSDA(pin1_SDA);
+  Wire1.setSCL(pint1_SCL);
   delay(1000);
   Serial.println("Begin!");
 }
@@ -30,6 +30,7 @@ void setup()
 void loop() {
   if (! baro.begin(&Wire)) {
     Serial.println("Couldnt find sensor");
+    delay(1000);
     return;
   }
   
