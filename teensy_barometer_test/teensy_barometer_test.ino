@@ -11,17 +11,12 @@ Adafruit_MPL3115A2 baro = Adafruit_MPL3115A2();
 int pin_SDA = 18; 
 int pin_SCL = 19;
 
-int pin1_SDA = 38;
-int pin1_SCL = 37;
-
 void setup() 
 {
   Serial.begin(9600);
   Wire.begin();
   Wire.setSDA(pin_SDA);
   Wire.setSCL(pin_SCL);
-  Wire1.setSDA(pin1_SDA);
-  Wire1.setSCL(pin1_SCL);
   delay(1000);
   Serial.println("Begin!");
 }
