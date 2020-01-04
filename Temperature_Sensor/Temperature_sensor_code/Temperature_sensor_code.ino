@@ -1,3 +1,12 @@
+#include <Wire.h>
+#include <Adafruit_MPL3115A2.h>
+// Power by connecting Vin to 3-5V, GND to GND
+// Uses I2C - connect SCL to the SCL pin, SDA to SDA pin
+// See the Wire tutorial for pinouts for each Arduino
+// http://arduino.cc/en/reference/wire
+Adafruit_MPL3115A2 baro = Adafruit_MPL3115A2();
+
+
 //Thermometer with thermistor
 /*thermistor parameters:
  * RT0: 10 000 Ω
@@ -25,40 +34,37 @@ int thermistorPins[] = {A16, A17, A18, A19, A20};
 
 int photoresistorPins[] = {A12, A13, A14, A15};
 
+int pinBaroSDA = 4; 
+int pinBaroSCL = 3;
+
+
 
 void setup() {
   Serial.begin(9600);
   analogReadResolution(10);
   T0 = 25 + 273.15;                 //Temperature T0 from datasheet, conversion from Celsius to kelvin
+  Wire2.setSDA(pinBaroSDA);
+  Wire2.setSCL(pinBaroSCL);
+  Wire2.begin();
+  delay(1000);
+  Serial.println("Begin!");
 }
 
 void loop() {
-//  VRT = analogRead(A18);              //Acquisition analog value of VRT
-//  VRT = (3.30 / 1023.00) * VRT;      //Conversion to voltage
-//  VR = VCC - VRT;
-//  RT = VRT / (VR / R);               //Resistance of RT
-//
-//  ln = log(RT / RT0);
-//  TX = (1 / ((ln / B) + (1 / T0))); //Temperature from thermistor
-//
-//  TX = TX - 273.15;                 //Conversion to Celsius
-//
-//  Serial.print("Temperature:");
-//  Serial.print("\t");
-//  Serial.print(TX);
-//  Serial.print("C\t\t");
-//  Serial.print(TX + 273.15);        //Conversion to Kelvin
-//  Serial.print("K\t\t");
-//  Serial.print((TX * 1.8) + 32);    //Conversion to Fahrenheit
-//  Serial.println("F");
-//
-//  Serial.println(analogRead(sensorPin));
-//  unsigned long time;
-//  Serial.print("Time: ");
-//  time = millis();
-//  Serial.println(time); //prints time since program started
-//  delay(500);
+  readThermistors();
+  readPhotoresistors();
+  readBarometer();
 
+  unsigned long time;
+  Serial.print("Time: ");
+  time = millis();
+  Serial.println(time);
+
+  delay(500);
+
+}
+
+void readThermistors(){
   for (int i = 0; i < THERMISTORSCOUNT; i++){
     arrVRT[i] = analogRead(thermistorPins[i]);
     arrVRT[i] = (3.30 / 1023.00) * arrVRT[i];
@@ -74,17 +80,27 @@ void loop() {
     Serial.print("C\t");
   }
   Serial.println();
+}
 
+void readPhotoresistors(){
   for (int i = 0; i < PHOTORESISTORCOUNT; i++){
     Serial.printf("Photoresistor %d: %d\t", i, analogRead(photoresistorPins[i]));
   }
+  Serial.println();
+}
 
-  unsigned long time;
-  Serial.print("Time: ");
-  time = millis();
-  Serial.println(time);
-
+void readBarometer(){
+  if (! baro.begin(&Wire2)) {
+    Serial.println("Couldnt find sensor");
+    delay(1000);
+    return;
+  }
   
-  delay(500);
-
+  float pascals = baro.getPressure();
+  // Our weather page presents pressure in Inches (Hg)
+  // Use http://www.onlineconversion.com/pressure.htm for other units
+  float altm = baro.getAltitude();
+  float tempC = baro.getTemperature();
+  
+  Serial.printf("%.2f Inches (Hg)\t%.2f meters\t%.2f C\n", pascals/3377, altm, tempC);
 }
