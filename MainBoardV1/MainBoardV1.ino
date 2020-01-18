@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include <SPI.h> // SPI library included for SparkFunLSM9DS1
+#include <SD.h>
 #include <SparkFunLSM9DS1.h> // SparkFun LSM9DS1 library
 #include <Adafruit_MPL3115A2.h>
 
@@ -33,6 +34,7 @@ LSM9DS1 imu;
 #define PHOTORESISTORCOUNT 4
 
 //Variables
+File myFile;
 float RT, VR, ln, TX, T0, VRT;
 float arrRT[5], arrVR[5], arrln[5], arrTX[5], arrVRT[5];
 int thermistorPins[] = {A16, A17, A18, A19, A20};
@@ -53,6 +55,17 @@ void setup() {
   Wire.begin();
   delay(1000);
   Serial.println("Begin!");
+//  while(!Serial)
+//  {
+//    ;
+//  }
+//  Serial.print("Initializing SD card...");
+//  if(!SD.begin(10))
+//  {
+//    Serial.println("initialization failed!");
+//    while(1);
+//  }
+    //Serial.println("initialization done.");
 }
 
 void loop() {
@@ -64,12 +77,24 @@ void loop() {
   Serial.print("Time: ");
   time = millis();
   Serial.println(time);
-
+//  myFile=SD.open("test.txt", FILE_WRITE);
+//  if(myFile)
+//  {
+//      readThermistors();
+//      readPhotoresistors();
+//      readBarometer();
+//      readIMU();
+//  }
+//  else
+//  {
+//    Serial.println("error opening test.txt");
+//  }
   delay(500);
 
 }
 
 void readThermistors(){
+  myFile=SD.open("test.txt", FILE_WRITE);
   for (int i = 0; i < THERMISTORSCOUNT; i++){
     arrVRT[i] = analogRead(thermistorPins[i]);
     arrVRT[i] = (3.30 / 1023.00) * arrVRT[i];
@@ -83,18 +108,42 @@ void readThermistors(){
     Serial.printf("Temperature %d: ", i);
     Serial.print(arrTX[i]);
     Serial.print("C\t");
-  }
+    if(myFile)
+    {
+      myFile.print("Temperature %d: ", i);
+      myFile.print(arrTX[i]);
+      myFile.print("C\t");
+    }
+    else
+    {
+      Serial.println("error opening test.txt");
+    }
+   }
+  myFile.println();
+  myFile.close();
   Serial.println();
 }
 
 void readPhotoresistors(){
+  myFile=SD.open("test.txt", FILE_WRITE);
   for (int i = 0; i < PHOTORESISTORCOUNT; i++){
     Serial.printf("Photoresistor %d: %d\t", i, analogRead(photoresistorPins[i]));
+    if(myFile)
+    {
+      myFile.print("Photoresistor %d: %d\t", i, analogRead(photoresistorPins[i]));
+    }
+    else
+    {
+      Serial.println("error opening test.txt");
+    }
   }
+  myFile.println();
+  myFile.close();
   Serial.println();
 }
 
 void readBarometer(){
+  myFile=SD.open("test.txt", FILE_WRITE);
   if (! baro.begin(&Wire2)) {
     Serial.println("Failed to communicate with Barometer.");
     return;
@@ -105,11 +154,21 @@ void readBarometer(){
   // Use http://www.onlineconversion.com/pressure.htm for other units
   float altm = baro.getAltitude();
   float tempC = baro.getTemperature();
-  
+   if(myFile)
+    {
+      myFile.print("%.2f Inches (Hg)\t%.2f meters\t%.2f C\n", pascals/3377, altm, tempC);
+    }
+    else
+    {
+      Serial.println("error opening test.txt");
+    }
+   }
+  myFile.close();
   Serial.printf("%.2f Inches (Hg)\t%.2f meters\t%.2f C\n", pascals/3377, altm, tempC);
 }
 
 void readIMU(){
+  myFile=SD.open("test.txt", FILE_WRITE);
   if (!imu.begin())
   {
     Serial.println("Failed to communicate with IMU.");
@@ -137,11 +196,21 @@ void readIMU(){
   // substituted for each other.
   printAttitude(imu.ax, imu.ay, imu.az,
                 -imu.my, -imu.mx, imu.mz);
+    if(myFile)
+    {
+      myFile.println();
+    }
+    else
+    {
+      Serial.println("error opening test.txt");
+    }
+  myFile.close();
   Serial.println();
 }
 
 void printGyro()
 {
+   myFile=SD.open("test.txt", FILE_WRITE);
   // Now we can use the gx, gy, and gz variables as we please calculated in DPS.
   Serial.print("G: ");
   Serial.print(imu.calcGyro(imu.gx), 2);
@@ -150,10 +219,27 @@ void printGyro()
   Serial.print(", ");
   Serial.print(imu.calcGyro(imu.gz), 2);
   Serial.println(" deg/s");
+  if(myFile)
+    {
+      myFile.print("G: ");
+      myFile.print(imu.calcGyro(imu.gx), 2);
+      myFile.print(", ");
+      myFile.print(imu.calcGyro(imu.gy), 2);
+      myFile.print(", ");
+      myFile.print(imu.calcGyro(imu.gz), 2);
+      myFile.println(" deg/s");
+    }
+    else
+    {
+      Serial.println("error opening test.txt");
+    }
+   }
+  myFile.close();
 }
 
 void printAccel()
 {
+  myFile=SD.open("test.txt", FILE_WRITE);
   // Now we can use the ax, ay, and az variables as we please calculated in g's.
   Serial.print("A: ");
   Serial.print(imu.calcAccel(imu.ax), 2);
@@ -162,10 +248,26 @@ void printAccel()
   Serial.print(", ");
   Serial.print(imu.calcAccel(imu.az), 2);
   Serial.println(" g");
+  if(myFile)
+    {
+      myFile.print("A: ");
+      myFile.print(imu.calcAccel(imu.ax), 2);
+      myFile.print(", ");
+      myFile.print(imu.calcAccel(imu.ay), 2);
+      myFile.print(", ");
+      myFile.print(imu.calcAccel(imu.az), 2);
+      myFile.println(" g");
+    }
+    else
+    {
+      Serial.println("error opening test.txt");
+    }
+    myFile.close();
 }
 
 void printMag()
 {
+   myFile=SD.open("test.txt", FILE_WRITE);
   // Now we can use the mx, my, and mz variables as we please calculated in Gauss.
   Serial.print("M: ");
   Serial.print(imu.calcMag(imu.mx), 2);
@@ -174,6 +276,21 @@ void printMag()
   Serial.print(", ");
   Serial.print(imu.calcMag(imu.mz), 2);
   Serial.println(" gauss");
+  if(myFile)
+    {
+      myFile.print("M: ");
+      myFile.print(imu.calcMag(imu.mx), 2);
+      myFile.print(", ");
+      myFile.print(imu.calcMag(imu.my), 2);
+      myFile.print(", ");
+      myFile.print(imu.calcMag(imu.mz), 2);
+      myFile.println(" gauss");
+    }
+    else
+    {
+      Serial.println("error opening test.txt");
+    }
+    myFile.close();
 }
 
 // Calculate pitch, roll, and heading.
@@ -183,6 +300,7 @@ void printMag()
 // http://www51.honeywell.com/aero/common/documents/myaerospacecatalog-documents/Defense_Brochures-documents/Magnetic__Literature_Application_notes-documents/AN203_Compass_Heading_Using_Magnetometers.pdf
 void printAttitude(float ax, float ay, float az, float mx, float my, float mz)
 {
+  myFile=SD.open("test.txt", FILE_WRITE);
   float roll = atan2(ay, az);
   float pitch = atan2(-ax, sqrt(ay * ay + az * az));
 
@@ -207,4 +325,17 @@ void printAttitude(float ax, float ay, float az, float mx, float my, float mz)
   Serial.print(", ");
   Serial.println(roll, 2);
   Serial.print("Heading: "); Serial.println(heading, 2);
+  if(myFile)
+    {
+      myFile.print("Pitch, Roll: ");
+      myFile.print(pitch, 2);
+      myFile.print(", ");
+      myFile.println(roll, 2);
+      myFile.print("Heading: "); Serial.println(heading, 2);
+    }
+    else
+    {
+      Serial.println("error opening test.txt");
+    }
+    myFile.close();
 }
