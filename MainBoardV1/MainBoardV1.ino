@@ -32,7 +32,13 @@ LSM9DS1 imu;
 
 #define THERMISTORSCOUNT 4
 #define PHOTORESISTORCOUNT 4
-
+void readIMU();
+void printAccel();
+void printMag();
+void readThermistors();
+void readBarometer();
+void readPhotoresistors();
+void printAttitude(float ax, float ay, float az, float mx, float my, float mz);
 //Variables
 File myFile;
 float RT, VR, ln, TX, T0, VRT;
@@ -55,20 +61,22 @@ void setup() {
   Wire.begin();
   delay(1000);
   Serial.println("Begin!");
-//  while(!Serial)
-//  {
-//    ;
-//  }
-//  Serial.print("Initializing SD card...");
-//  if(!SD.begin(10))
-//  {
-//    Serial.println("initialization failed!");
-//    while(1);
-//  }
-    //Serial.println("initialization done.");
+  while(!Serial)
+  {
+    ;
+  }
+  Serial.print("Initializing SD card...");
+  if(!SD.begin(BUILTIN_SDCARD))
+  {
+    Serial.println("initialization failed!");
+    while(1);
+  }
+    Serial.println("initialization done.");
+    SD.remove("test.txt");
 }
 
 void loop() {
+  myFile=SD.open("test.txt", FILE_WRITE);
   readThermistors();
   readPhotoresistors();
   readBarometer();
@@ -77,20 +85,17 @@ void loop() {
   Serial.print("Time: ");
   time = millis();
   Serial.println(time);
-//  myFile=SD.open("test.txt", FILE_WRITE);
-//  if(myFile)
-//  {
-//      readThermistors();
-//      readPhotoresistors();
-//      readBarometer();
-//      readIMU();
-//  }
-//  else
-//  {
-//    Serial.println("error opening test.txt");
-//  }
   delay(500);
-
+  if(myFile)
+    {
+      myFile.print("Time: ");
+      myFile.println(time);
+    }
+    else
+    {
+      Serial.println("error writting loop");
+    }
+  myFile.close();
 }
 
 void readThermistors(){
@@ -110,13 +115,13 @@ void readThermistors(){
     Serial.print("C\t");
     if(myFile)
     {
-      myFile.print("Temperature %d: ", i);
+      myFile.printf("Temperature %d: ", i);
       myFile.print(arrTX[i]);
       myFile.print("C\t");
     }
     else
     {
-      Serial.println("error opening test.txt");
+      Serial.println("error writting thermorresistors");
     }
    }
   myFile.println();
@@ -130,11 +135,11 @@ void readPhotoresistors(){
     Serial.printf("Photoresistor %d: %d\t", i, analogRead(photoresistorPins[i]));
     if(myFile)
     {
-      myFile.print("Photoresistor %d: %d\t", i, analogRead(photoresistorPins[i]));
+      myFile.printf("Photoresistor %d: %d\t", i, analogRead(photoresistorPins[i]));
     }
     else
     {
-      Serial.println("error opening test.txt");
+      Serial.println("error writting Photoresistors.txt");
     }
   }
   myFile.println();
@@ -156,19 +161,17 @@ void readBarometer(){
   float tempC = baro.getTemperature();
    if(myFile)
     {
-      myFile.print("%.2f Inches (Hg)\t%.2f meters\t%.2f C\n", pascals/3377, altm, tempC);
+      myFile.printf("%.2f Inches (Hg)\t%.2f meters\t%.2f C\n", pascals/3377, altm, tempC);
     }
     else
     {
-      Serial.println("error opening test.txt");
+      Serial.println("error writting barometer");
     }
-   }
   myFile.close();
   Serial.printf("%.2f Inches (Hg)\t%.2f meters\t%.2f C\n", pascals/3377, altm, tempC);
 }
 
 void readIMU(){
-  myFile=SD.open("test.txt", FILE_WRITE);
   if (!imu.begin())
   {
     Serial.println("Failed to communicate with IMU.");
@@ -196,15 +199,6 @@ void readIMU(){
   // substituted for each other.
   printAttitude(imu.ax, imu.ay, imu.az,
                 -imu.my, -imu.mx, imu.mz);
-    if(myFile)
-    {
-      myFile.println();
-    }
-    else
-    {
-      Serial.println("error opening test.txt");
-    }
-  myFile.close();
   Serial.println();
 }
 
@@ -231,9 +225,8 @@ void printGyro()
     }
     else
     {
-      Serial.println("error opening test.txt");
+      Serial.println("error writting GYRO");
     }
-   }
   myFile.close();
 }
 
@@ -260,7 +253,7 @@ void printAccel()
     }
     else
     {
-      Serial.println("error opening test.txt");
+      Serial.println("error writting Accel");
     }
     myFile.close();
 }
@@ -288,7 +281,7 @@ void printMag()
     }
     else
     {
-      Serial.println("error opening test.txt");
+      Serial.println("error writting MAG");
     }
     myFile.close();
 }
@@ -335,7 +328,7 @@ void printAttitude(float ax, float ay, float az, float mx, float my, float mz)
     }
     else
     {
-      Serial.println("error opening test.txt");
+      Serial.println("error writting attitude");
     }
     myFile.close();
 }
