@@ -1,6 +1,5 @@
 #include <Wire.h>
 #include <SPI.h> // SPI library included for SparkFunLSM9DS1
-#include <SD.h>
 #include <SparkFunLSM9DS1.h> // SparkFun LSM9DS1 library
 #include <Adafruit_MPL3115A2.h>
 
@@ -32,15 +31,28 @@ LSM9DS1 imu;
 
 #define THERMISTORSCOUNT 4
 #define PHOTORESISTORCOUNT 4
+<<<<<<< Updated upstream
+
+//Variables
+=======
+#define FILENAME  "values.csv"
 void readIMU();
 void printAccel();
 void printMag();
 void readThermistors();
 void readBarometer();
 void readPhotoresistors();
+void recordValues();
 void printAttitude(float ax, float ay, float az, float mx, float my, float mz);
 //Variables
-File myFile;
+File myfile;
+int photoValueArray[PHOTORESISTORCOUNT]; 
+int thermoValueArray[THERMISTORSCOUNT];
+int imuGyrox, imuGyroy, imuGyroz, imuAccelx, imuAccely, imuAccelz, imuMagx, imuMagy, imuMagz; 
+int baroPressure, baroAltitude, baroTemperature;
+int attitudePitch, attitudeRoll;
+int globalTime;
+>>>>>>> Stashed changes
 float RT, VR, ln, TX, T0, VRT;
 float arrRT[5], arrVR[5], arrln[5], arrTX[5], arrVRT[5];
 int thermistorPins[] = {A16, A17, A18, A19, A20};
@@ -51,7 +63,7 @@ int pinBaroSDA = 4;
 int pinBaroSCL = 3;
 
 void setup() {
-  //Serial.begin(9600);
+   //Serial.begin(9600);
   Serial.begin(115200);
   analogReadResolution(10);
   T0 = 25 + 273.15;                 //Temperature T0 from datasheet, conversion from Celsius to kelvin
@@ -61,6 +73,8 @@ void setup() {
   Wire.begin();
   delay(1000);
   Serial.println("Begin!");
+<<<<<<< Updated upstream
+=======
   while(!Serial)
   {
     ;
@@ -72,34 +86,57 @@ void setup() {
     while(1);
   }
     Serial.println("initialization done.");
-    SD.remove("test.txt");
+  myfile = SD.open(FILENAME, FILE_WRITE);
+  if(myfile)
+  {
+    myfile.print("Time:,");
+    myfile.print("Temperature 0:,");
+    myfile.print("Temperature 1:,");
+    myfile.print("Temperature 2:,");
+    myfile.print("Temperature 3:,");
+    myfile.print("Photoresistor 0:,");
+    myfile.print("Photoresistor 1:,");
+    myfile.print("Photoresistor 2:,");
+    myfile.print("Photoresistor 3:,");
+    myfile.print("Pressure (Hg):,");
+    myfile.print("Altitude(meters):,");
+    myfile.print("Temperature(C):,");
+    myfile.print("IMU Gyro(x,y,z):,");
+    myfile.print("IMU Accel(x,y,z):,");
+    myfile.print("IMU Mag(x,y,z):,");
+    myfile.print("Pitch:,");
+    myfile.print("Roll:,");
+    myfile.println();
+  }
+  else
+    Serial.println("Error writting header");
+  myfile.close();
+ 
+>>>>>>> Stashed changes
 }
 
 void loop() {
-  myFile=SD.open("test.txt", FILE_WRITE);
   readThermistors();
   readPhotoresistors();
   readBarometer();
   readIMU();
+  recordValues();
   unsigned long time;
   Serial.print("Time: ");
   time = millis();
+  globalTime = time/1000;
   Serial.println(time);
+<<<<<<< Updated upstream
+
   delay(500);
-  if(myFile)
-    {
-      myFile.print("Time: ");
-      myFile.println(time);
-    }
-    else
-    {
-      Serial.println("error writting loop");
-    }
-  myFile.close();
+
+=======
+ 
+  delay(1000);
+>>>>>>> Stashed changes
 }
 
 void readThermistors(){
-  myFile=SD.open("test.txt", FILE_WRITE);
   for (int i = 0; i < THERMISTORSCOUNT; i++){
     arrVRT[i] = analogRead(thermistorPins[i]);
     arrVRT[i] = (3.30 / 1023.00) * arrVRT[i];
@@ -109,65 +146,43 @@ void readThermistors(){
     arrln[i] = log(arrRT[i] / RT0);
     arrTX[i] = (1 / ((arrln[i] / B) + (1 / T0)));
     arrTX[i] = arrTX[i] - 273.15;
-
+    thermoValueArray[i] = arrTX[i];
     Serial.printf("Temperature %d: ", i);
     Serial.print(arrTX[i]);
     Serial.print("C\t");
-    if(myFile)
-    {
-      myFile.printf("Temperature %d: ", i);
-      myFile.print(arrTX[i]);
-      myFile.print("C\t");
-    }
-    else
-    {
-      Serial.println("error writting thermorresistors");
-    }
-   }
-  myFile.println();
-  myFile.close();
+  }
   Serial.println();
 }
 
 void readPhotoresistors(){
-  myFile=SD.open("test.txt", FILE_WRITE);
   for (int i = 0; i < PHOTORESISTORCOUNT; i++){
     Serial.printf("Photoresistor %d: %d\t", i, analogRead(photoresistorPins[i]));
-    if(myFile)
-    {
-      myFile.printf("Photoresistor %d: %d\t", i, analogRead(photoresistorPins[i]));
-    }
-    else
-    {
-      Serial.println("error writting Photoresistors.txt");
-    }
+<<<<<<< Updated upstream
+=======
+    photoValueArray[i] = analogRead(photoresistorPins[i]);
+>>>>>>> Stashed changes
   }
-  myFile.println();
-  myFile.close();
   Serial.println();
 }
 
 void readBarometer(){
-  myFile=SD.open("test.txt", FILE_WRITE);
   if (! baro.begin(&Wire2)) {
     Serial.println("Failed to communicate with Barometer.");
     return;
   }
   
   float pascals = baro.getPressure();
+  baroPressure = pascals/3377;
   // Our weather page presents pressure in Inches (Hg)
   // Use http://www.onlineconversion.com/pressure.htm for other units
   float altm = baro.getAltitude();
+  baroAltitude = altm;
   float tempC = baro.getTemperature();
-   if(myFile)
-    {
-      myFile.printf("%.2f Inches (Hg)\t%.2f meters\t%.2f C\n", pascals/3377, altm, tempC);
-    }
-    else
-    {
-      Serial.println("error writting barometer");
-    }
-  myFile.close();
+<<<<<<< Updated upstream
+  
+=======
+  baroTemperature = tempC;
+>>>>>>> Stashed changes
   Serial.printf("%.2f Inches (Hg)\t%.2f meters\t%.2f C\n", pascals/3377, altm, tempC);
 }
 
@@ -204,86 +219,47 @@ void readIMU(){
 
 void printGyro()
 {
-   myFile=SD.open("test.txt", FILE_WRITE);
   // Now we can use the gx, gy, and gz variables as we please calculated in DPS.
   Serial.print("G: ");
   Serial.print(imu.calcGyro(imu.gx), 2);
+  imuGyrox = imu.calcGyro(imu.gx);
   Serial.print(", ");
   Serial.print(imu.calcGyro(imu.gy), 2);
+  imuGyroy = imu.calcGyro(imu.gy);
   Serial.print(", ");
   Serial.print(imu.calcGyro(imu.gz), 2);
+  imuGyroz = imu.calcGyro(imu.gz);
   Serial.println(" deg/s");
-  if(myFile)
-    {
-      myFile.print("G: ");
-      myFile.print(imu.calcGyro(imu.gx), 2);
-      myFile.print(", ");
-      myFile.print(imu.calcGyro(imu.gy), 2);
-      myFile.print(", ");
-      myFile.print(imu.calcGyro(imu.gz), 2);
-      myFile.println(" deg/s");
-    }
-    else
-    {
-      Serial.println("error writting GYRO");
-    }
-  myFile.close();
 }
 
 void printAccel()
 {
-  myFile=SD.open("test.txt", FILE_WRITE);
   // Now we can use the ax, ay, and az variables as we please calculated in g's.
   Serial.print("A: ");
   Serial.print(imu.calcAccel(imu.ax), 2);
+  imuAccelx = imu.calcAccel(imu.ax);
   Serial.print(", ");
   Serial.print(imu.calcAccel(imu.ay), 2);
+  imuAccely = imu.calcAccel(imu.ay);
   Serial.print(", ");
   Serial.print(imu.calcAccel(imu.az), 2);
+  imuAccelz = imu.calcAccel(imu.az);
   Serial.println(" g");
-  if(myFile)
-    {
-      myFile.print("A: ");
-      myFile.print(imu.calcAccel(imu.ax), 2);
-      myFile.print(", ");
-      myFile.print(imu.calcAccel(imu.ay), 2);
-      myFile.print(", ");
-      myFile.print(imu.calcAccel(imu.az), 2);
-      myFile.println(" g");
-    }
-    else
-    {
-      Serial.println("error writting Accel");
-    }
-    myFile.close();
 }
 
 void printMag()
 {
-   myFile=SD.open("test.txt", FILE_WRITE);
   // Now we can use the mx, my, and mz variables as we please calculated in Gauss.
   Serial.print("M: ");
   Serial.print(imu.calcMag(imu.mx), 2);
+  imuMagx = imu.calcMag(imu.mx);
   Serial.print(", ");
   Serial.print(imu.calcMag(imu.my), 2);
+  imuMagy = imu.calcMag(imu.my);
   Serial.print(", ");
   Serial.print(imu.calcMag(imu.mz), 2);
+  imuMagz = imu.calcMag(imu.mz);
   Serial.println(" gauss");
-  if(myFile)
-    {
-      myFile.print("M: ");
-      myFile.print(imu.calcMag(imu.mx), 2);
-      myFile.print(", ");
-      myFile.print(imu.calcMag(imu.my), 2);
-      myFile.print(", ");
-      myFile.print(imu.calcMag(imu.mz), 2);
-      myFile.println(" gauss");
-    }
-    else
-    {
-      Serial.println("error writting MAG");
-    }
-    myFile.close();
 }
 
 // Calculate pitch, roll, and heading.
@@ -293,7 +269,6 @@ void printMag()
 // http://www51.honeywell.com/aero/common/documents/myaerospacecatalog-documents/Defense_Brochures-documents/Magnetic__Literature_Application_notes-documents/AN203_Compass_Heading_Using_Magnetometers.pdf
 void printAttitude(float ax, float ay, float az, float mx, float my, float mz)
 {
-  myFile=SD.open("test.txt", FILE_WRITE);
   float roll = atan2(ay, az);
   float pitch = atan2(-ax, sqrt(ay * ay + az * az));
 
@@ -312,23 +287,48 @@ void printAttitude(float ax, float ay, float az, float mx, float my, float mz)
   heading *= 180.0 / PI;
   pitch *= 180.0 / PI;
   roll  *= 180.0 / PI;
-
+  attitudePitch = pitch;
+  attitudeRoll = roll;
   Serial.print("Pitch, Roll: ");
   Serial.print(pitch, 2);
   Serial.print(", ");
   Serial.println(roll, 2);
   Serial.print("Heading: "); Serial.println(heading, 2);
-  if(myFile)
+<<<<<<< Updated upstream
+=======
+}
+void recordValues()
+{
+  myfile = SD.open(FILENAME, FILE_WRITE);
+   if(myfile)
+  {
+    myfile.print(globalTime); myfile.print(",");
+    for(int i=0; i<THERMISTORSCOUNT; i++)
     {
-      myFile.print("Pitch, Roll: ");
-      myFile.print(pitch, 2);
-      myFile.print(", ");
-      myFile.println(roll, 2);
-      myFile.print("Heading: "); Serial.println(heading, 2);
+      myfile.print(thermoValueArray[i]);
+      myfile.print(",");
     }
-    else
+    for(int i=0; i<PHOTORESISTORCOUNT; i++)
     {
-      Serial.println("error writting attitude");
+      myfile.print(photoValueArray[i]);
+      myfile.print(",");
     }
-    myFile.close();
+    myfile.print(baroPressure); myfile.print(",");
+    myfile.print(baroAltitude); myfile.print(",");
+    myfile.print(baroTemperature);  myfile.print(",");
+    myfile.print(imuGyrox); myfile.print(",");
+    myfile.print(imuGyroy); myfile.print(",");
+    myfile.print(imuGyroz); myfile.print(",");
+    myfile.print(imuAccelx);  myfile.print(",");
+    myfile.print(imuAccely);  myfile.print(",");
+    myfile.print(imuAccelz);  myfile.print(",");
+    myfile.print(imuMagx);   myfile.print(",");
+    myfile.print(imuMagy);  myfile.print(",");
+    myfile.print(imuMagz);  myfile.print(",");
+    myfile.print(attitudePitch); myfile.print(",");
+    myfile.print(attitudeRoll); myfile.print(",");
+    myfile.println();
+  }
+  myfile.close();
+>>>>>>> Stashed changes
 }
