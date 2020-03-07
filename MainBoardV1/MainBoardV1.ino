@@ -1,9 +1,8 @@
 #include <Wire.h>
 #include <SPI.h> // SPI library included for SparkFunLSM9DS1
-#include <SD.h>
 #include <SparkFunLSM9DS1.h> // SparkFun LSM9DS1 library
 #include <Adafruit_MPL3115A2.h>
-#include "SDFat.h"
+#include "SdFat.h"
 
 // Power by connecting Vin to 3-5V, GND to GND
 // Uses I2C - connect SCL to the SCL pin, SDA to SDA pin
