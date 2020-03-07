@@ -3,6 +3,7 @@
 #include <SD.h>
 #include <SparkFunLSM9DS1.h> // SparkFun LSM9DS1 library
 #include <Adafruit_MPL3115A2.h>
+#include "SDFat.h"
 
 // Power by connecting Vin to 3-5V, GND to GND
 // Uses I2C - connect SCL to the SCL pin, SDA to SDA pin
@@ -35,6 +36,7 @@ LSM9DS1 imu;
 
 //Variables
 #define FILENAME  "values.csv"
+void writeHeader();
 void readIMU();
 void printAccel();
 void printMag();
@@ -44,7 +46,12 @@ void readPhotoresistors();
 void recordValues();
 void printAttitude(float ax, float ay, float az, float mx, float my, float mz);
 //Variables
+const uint8_t chipSelect = SS;
 File myfile;
+SdFatSdio sd;
+SdFatSdioEX sdEx;
+const size_t BUF_DIM = 32768;
+const uint32_t FILE_SIZE = 256UL*BUF_DIM;
 int photoValueArray[PHOTORESISTORCOUNT]; 
 int thermoValueArray[THERMISTORSCOUNT];
 int imuGyrox, imuGyroy, imuGyroz, imuAccelx, imuAccely, imuAccelz, imuMagx, imuMagy, imuMagz; 
@@ -71,20 +78,71 @@ void setup() {
   Wire.begin();
   delay(1000);
   Serial.println("Begin!");
+  const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
+  char fileName[13] = FILE_BASE_NAME "00.csv";
   while(!Serial)
   {
-    ;
+    SysCall::yield();
   }
-  Serial.print("Initializing SD card...");
-  if(!SD.begin(BUILTIN_SDCARD))
-  {
-    Serial.println("initialization failed!");
-    //while(1);
+ Serial.println(F("Type any character to start"));
+  while (!Serial.available()) {
+    SysCall::yield();
   }
-    Serial.println("initialization done.");
-  myfile = SD.open(FILENAME, FILE_WRITE);
-  if(myfile)
-  {
+ if (!sd.begin(chipSelect, SD_SCK_MHZ(50))) {
+    sd.initErrorHalt();
+  }
+   while (sd.exists(fileName)) {
+    if (fileName[BASE_NAME_SIZE + 1] != '9') {
+      fileName[BASE_NAME_SIZE + 1]++;
+    } else if (fileName[BASE_NAME_SIZE] != '9') {
+      fileName[BASE_NAME_SIZE + 1] = '0';
+      fileName[BASE_NAME_SIZE]++;
+    } else {
+      error("Can't create file name");
+    }
+  }
+  if (!myfile.open(fileName, O_WRONLY | O_CREAT | O_EXCL)) {
+    error("file.open");
+    do {
+    delay(10);
+  } while (Serial.available() && Serial.read() >= 0);
+
+  Serial.print(F("Logging to: "));
+  Serial.println(fileName);
+  Serial.println(F("Type any character to stop"));
+  writeHeader();
+ 
+}
+
+void loop() {
+  readThermistors();
+  readPhotoresistors();
+  readBarometer();
+  readIMU();
+  unsigned long time;
+  Serial.print("Time: ");
+  time = millis();
+  globalTime = time/1000;
+  Serial.println(time);
+  recordValues();
+  if (!myfile.sync() || myfile.getWriteError()) {
+    error("write error");
+  }
+
+  if (Serial.available()) {
+    // Close file and stop.
+    myfile.close();
+    Serial.println(F("Done"));
+    SysCall::halt();
+  }
+  delay(500);
+ 
+  //delay(1000);
+
+}
+
+void writeHeader()
+{
     myfile.print("Time:,");
     myfile.print("Temperature 0:,");
     myfile.print("Temperature 1:,");
@@ -103,31 +161,7 @@ void setup() {
     myfile.print("Pitch:,");
     myfile.print("Roll:,");
     myfile.println();
-  }
-  else
-    Serial.println("Error writting header");
-  myfile.close();
- 
 }
-
-void loop() {
-  readThermistors();
-  readPhotoresistors();
-  readBarometer();
-  readIMU();
-  //recordValues();
-  unsigned long time;
-  Serial.print("Time: ");
-  time = millis();
-  globalTime = time/1000;
-  Serial.println(time);
-
-  delay(500);
- 
-  //delay(1000);
-
-}
-
 void readThermistors(){
   for (int i = 0; i < THERMISTORSCOUNT; i++){
     arrVRT[i] = analogRead(thermistorPins[i]);
@@ -282,9 +316,6 @@ void printAttitude(float ax, float ay, float az, float mx, float my, float mz)
 }
 void recordValues()
 {
-  myfile = SD.open(FILENAME, FILE_WRITE);
-   if(myfile)
-  {
     myfile.print(globalTime); myfile.print(",");
     for(int i=0; i<THERMISTORSCOUNT; i++)
     {
@@ -311,6 +342,4 @@ void recordValues()
     myfile.print(attitudePitch); myfile.print(",");
     myfile.print(attitudeRoll); myfile.print(",");
     myfile.println();
-  }
-  myfile.close();
 }
