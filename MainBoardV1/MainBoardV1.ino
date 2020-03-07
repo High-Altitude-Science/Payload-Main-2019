@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include <SPI.h> // SPI library included for SparkFunLSM9DS1
+#include <SD.h>
 #include <SparkFunLSM9DS1.h> // SparkFun LSM9DS1 library
 #include <Adafruit_MPL3115A2.h>
 
@@ -31,10 +32,8 @@ LSM9DS1 imu;
 
 #define THERMISTORSCOUNT 4
 #define PHOTORESISTORCOUNT 4
-<<<<<<< Updated upstream
 
 //Variables
-=======
 #define FILENAME  "values.csv"
 void readIMU();
 void printAccel();
@@ -52,7 +51,6 @@ int imuGyrox, imuGyroy, imuGyroz, imuAccelx, imuAccely, imuAccelz, imuMagx, imuM
 int baroPressure, baroAltitude, baroTemperature;
 int attitudePitch, attitudeRoll;
 int globalTime;
->>>>>>> Stashed changes
 float RT, VR, ln, TX, T0, VRT;
 float arrRT[5], arrVR[5], arrln[5], arrTX[5], arrVRT[5];
 int thermistorPins[] = {A16, A17, A18, A19, A20};
@@ -73,8 +71,6 @@ void setup() {
   Wire.begin();
   delay(1000);
   Serial.println("Begin!");
-<<<<<<< Updated upstream
-=======
   while(!Serial)
   {
     ;
@@ -83,7 +79,7 @@ void setup() {
   if(!SD.begin(BUILTIN_SDCARD))
   {
     Serial.println("initialization failed!");
-    while(1);
+    //while(1);
   }
     Serial.println("initialization done.");
   myfile = SD.open(FILENAME, FILE_WRITE);
@@ -112,7 +108,6 @@ void setup() {
     Serial.println("Error writting header");
   myfile.close();
  
->>>>>>> Stashed changes
 }
 
 void loop() {
@@ -120,20 +115,17 @@ void loop() {
   readPhotoresistors();
   readBarometer();
   readIMU();
-  recordValues();
+  //recordValues();
   unsigned long time;
   Serial.print("Time: ");
   time = millis();
   globalTime = time/1000;
   Serial.println(time);
-<<<<<<< Updated upstream
 
   delay(500);
-
-=======
  
-  delay(1000);
->>>>>>> Stashed changes
+  //delay(1000);
+
 }
 
 void readThermistors(){
@@ -157,10 +149,7 @@ void readThermistors(){
 void readPhotoresistors(){
   for (int i = 0; i < PHOTORESISTORCOUNT; i++){
     Serial.printf("Photoresistor %d: %d\t", i, analogRead(photoresistorPins[i]));
-<<<<<<< Updated upstream
-=======
     photoValueArray[i] = analogRead(photoresistorPins[i]);
->>>>>>> Stashed changes
   }
   Serial.println();
 }
@@ -178,11 +167,7 @@ void readBarometer(){
   float altm = baro.getAltitude();
   baroAltitude = altm;
   float tempC = baro.getTemperature();
-<<<<<<< Updated upstream
-  
-=======
   baroTemperature = tempC;
->>>>>>> Stashed changes
   Serial.printf("%.2f Inches (Hg)\t%.2f meters\t%.2f C\n", pascals/3377, altm, tempC);
 }
 
@@ -294,8 +279,6 @@ void printAttitude(float ax, float ay, float az, float mx, float my, float mz)
   Serial.print(", ");
   Serial.println(roll, 2);
   Serial.print("Heading: "); Serial.println(heading, 2);
-<<<<<<< Updated upstream
-=======
 }
 void recordValues()
 {
@@ -330,5 +313,4 @@ void recordValues()
     myfile.println();
   }
   myfile.close();
->>>>>>> Stashed changes
 }
