@@ -34,7 +34,7 @@ LSM9DS1 imu;
 #define PHOTORESISTORCOUNT 4
 
 //Variables
-#define FILENAME  "values.csv"
+#define FILE_BASE_NAME  "values.csv"
 void writeHeader();
 void readIMU();
 void printAccel();
@@ -87,24 +87,9 @@ void setup() {
   while (!Serial.available()) {
     SysCall::yield();
   }
- if (!sd.begin(chipSelect, SD_SCK_MHZ(50))) {
-    sd.initErrorHalt();
-  }
-   while (sd.exists(fileName)) {
-    if (fileName[BASE_NAME_SIZE + 1] != '9') {
-      fileName[BASE_NAME_SIZE + 1]++;
-    } else if (fileName[BASE_NAME_SIZE] != '9') {
-      fileName[BASE_NAME_SIZE + 1] = '0';
-      fileName[BASE_NAME_SIZE]++;
-    } else {
-      error("Can't create file name");
-    }
-  }
-  if (!myfile.open(fileName, O_WRONLY | O_CREAT | O_EXCL)) {
-    error("file.open");
-    do {
-    delay(10);
-  } while (Serial.available() && Serial.read() >= 0);
+  if (!file.open("TeensyDemo.bin", O_RDWR | O_CREAT)) {
+    errorHalt("open failed");
+  }   
 
   Serial.print(F("Logging to: "));
   Serial.println(fileName);
